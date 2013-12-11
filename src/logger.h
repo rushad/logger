@@ -1,49 +1,43 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
-#include <ostream>
 #include <string>
+#include <vector>
 
 namespace Log
 {
-  class Backend
+  struct Event
+  {
+    std::string Message;
+    std::string Category;
+  };
+
+  typedef std::vector<Event> EventList;
+
+  class Store
   {
   public:
-    virtual ~Backend()
+    virtual ~Store()
     {
     }
 
-    virtual void write(const std::string& str) const = 0;
+    virtual void Add(const Event& message) = 0;
   };
-  typedef std::auto_ptr<Backend> BackendPtr;
 
   class Logger
   {
-    BackendPtr Backend;
   public:
-    explicit Logger(BackendPtr backend)
-      : Backend(backend)
-    {
-    }
-    void write(const std::string& str) const;
+    Logger(Store& store);
+    void Write(const std::string& category, const std::string& message);
+  
+  private:
+    Store& TheStore;
   };
-  typedef std::auto_ptr<Logger> LoggerPtr;
 
-  class BackendStream : public Backend
+  class Time
   {
-    std::ostream& Stream;
   public:
-    explicit BackendStream(std::ostream& stream = std::cout)
-      : Stream(stream)
-    {
-    }
-
-    virtual void write(const std::string& str) const
-    {
-      Stream << str;
-    }
+    Time(const Time& time);
+    static Time Now();
   };
-
-  LoggerPtr CreateLogger(BackendPtr backend = BackendPtr(new BackendStream));
 }

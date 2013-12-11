@@ -2,14 +2,16 @@
 
 namespace Log
 {
-  LoggerPtr CreateLogger(BackendPtr backend)
+  Logger::Logger(Store& store)
+    : TheStore(store)
   {
-    return LoggerPtr(new Logger(backend));
   }
 
-  void Logger::write(const std::string& str) const
+  void Logger::Write(const std::string& category, const std::string& message)
   {
-    Backend->write(str);
+    Event theEvent;
+    theEvent.Message = message;
+    theEvent.Category = category;
+    TheStore.Add(theEvent);
   }
-
 }

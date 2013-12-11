@@ -30,9 +30,11 @@ GTEST_API_ int main(int argc, char** argv)
     return -1;
   }
 
+#if 0
   std::ostringstream oss;
   Log::LoggerPtr log = Log::CreateLogger(Log::BackendPtr(new Log::BackendStream(oss)));
   log->write("Hello world!");
   std::cout << oss.str();
+#endif
   return 0;
 }
