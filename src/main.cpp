@@ -1,8 +1,8 @@
-//#include "logger.h"
+#include "logger.h"
 
 #include <gtest/gtest.h>
 
-#include <iostream>
+#include <sstream>
 
 bool CheckOptions(int argc, char** argv)
 {
@@ -30,7 +30,9 @@ GTEST_API_ int main(int argc, char** argv)
     return -1;
   }
 
-  std::cout << "Hello world!" << std::endl;
-
+  std::ostringstream oss;
+  Log::LoggerPtr log = Log::CreateLogger(Log::BackendPtr(new Log::BackendStream(oss)));
+  log->write("Hello world!");
+  std::cout << oss.str();
   return 0;
 }
