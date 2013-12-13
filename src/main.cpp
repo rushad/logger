@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "memory_store.h"
 
 #include <gtest/gtest.h>
 
@@ -30,11 +31,19 @@ GTEST_API_ int main(int argc, char** argv)
     return -1;
   }
 
-#if 0
-  std::ostringstream oss;
-  Log::LoggerPtr log = Log::CreateLogger(Log::BackendPtr(new Log::BackendStream(oss)));
-  log->write("Hello world!");
-  std::cout << oss.str();
-#endif
+  Log::MemoryStore store;
+  Log::Logger log(store);
+
+  log.Write("cat1", "msg1");
+  log.Write("cat1", "msg2");
+  log.Write("cat3", "msg3");
+  log.Write("cat4", "msg4");
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+
+  Log::EventList events = store.Find("cat1");
+
+  for(Log::EventList::const_iterator it = events.begin(), end = events.end(); it != end; ++it)
+    std::cout << (*it)->Message << std::endl;
+
   return 0;
 }

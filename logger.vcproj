@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="gtestd.lib"
+				AdditionalDependencies="pthreadVCE2.lib gtestd.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -136,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="gtest.lib"
+				AdditionalDependencies="pthreadVCE2.lib gtest.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -194,6 +194,10 @@
 				RelativePath=".\src\test_logger.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\thread_loop.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -201,11 +205,19 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\src\atomic_queue.h"
+				>
+			</File>
+			<File
 				RelativePath=".\src\logger.h"
 				>
 			</File>
 			<File
 				RelativePath=".\src\memory_store.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\thread_loop.h"
 				>
 			</File>
 		</Filter>
