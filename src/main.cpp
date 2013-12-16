@@ -1,9 +1,7 @@
 #include "logger.h"
-#include "memory_store.h"
+#include "xml_store.h"
 
 #include <gtest/gtest.h>
-
-#include <sstream>
 
 bool CheckOptions(int argc, char** argv)
 {
@@ -31,19 +29,21 @@ GTEST_API_ int main(int argc, char** argv)
     return -1;
   }
 
-  Log::MemoryStore store;
-  Log::Logger log(store);
+//  Log::MemoryStore store;
+  Log::XmlStore store("log.xml");
+  Log::Logger log(store, Log::VERB_INFO);
 
-  log.Write("cat1", "msg1");
-  log.Write("cat1", "msg2");
-  log.Write("cat3", "msg3");
-  log.Write("cat4", "msg4");
-  boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+  log.Write(Log::VERB_INFO, "cat1", "сообщение");
+  log.Write(Log::VERB_INFO, "cat1", "msg2");
+  log.Write(Log::VERB_INFO, "cat3", "msg3");
+  log.Write(Log::VERB_INFO, "cat4", "msg4");
 
+  log.WaitForFlush();
+/*
   Log::EventList events = store.Find("cat1");
 
   for(Log::EventList::const_iterator it = events.begin(), end = events.end(); it != end; ++it)
     std::cout << (*it)->Message << std::endl;
-
+*/
   return 0;
 }

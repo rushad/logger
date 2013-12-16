@@ -1,11 +1,9 @@
 #pragma once
 
-#include "boost/thread/condition_variable.hpp"
-#include "boost/thread/mutex.hpp"
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include <queue>
-
-#include "logger.h"
 
 namespace Log
 {
@@ -20,11 +18,7 @@ namespace Log
 
     ~AtomicQueue()
     {
-      {
-        boost::lock_guard<boost::mutex> locker(LockQueue);
-        Stop = true;
-      }
-      CheckQueue.notify_one();
+      Close();
     }
 
     void Put(const T& data)
@@ -33,14 +27,14 @@ namespace Log
         boost::lock_guard<boost::mutex> locker(LockQueue);
         Queue.push_back(data);
       }
-      CheckQueue.notify_one();
+      EventArrived.notify_one();
     }
 
     T Get()
     {
       boost::unique_lock<boost::mutex> locker(LockQueue);
       while (!Stop && Queue.empty())
-        CheckQueue.wait(locker);
+        EventArrived.wait(locker);
 
       if (Stop)
         return T();
@@ -48,12 +42,34 @@ namespace Log
       T data = Queue.front();
       Queue.pop_front();
 
+      if (Queue.empty())
+        QueueEmptied.notify_all();
+
       return data;
-  }
+    }
+
+    void Close()
+    {
+      {
+        boost::lock_guard<boost::mutex> locker(LockQueue);
+        Stop = true;
+      }
+      EventArrived.notify_one();
+      QueueEmptied.notify_all();
+    }
+
+    void WaitForEmpty()
+    {
+      boost::unique_lock<boost::mutex> locker(LockQueue);
+      while (!Stop && !Queue.empty())
+        QueueEmptied.wait(locker);
+    }
+
 
   private:
-    boost::mutex LockQueue;
-    boost::condition_variable CheckQueue;
+    mutable boost::mutex LockQueue;
+    boost::condition_variable EventArrived;
+    boost::condition_variable QueueEmptied;
     std::deque<T> Queue;
     bool Stop;
   };
