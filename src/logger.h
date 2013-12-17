@@ -2,8 +2,8 @@
 
 #include "atomic_queue.h"
 #include "thread_loop.h"
+#include "unique_time.h"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include <string>
@@ -18,13 +18,14 @@ namespace Log
     VERB_ERROR
   };
 
+  typedef std::map<std::string, std::string> MapTags;
   struct Event
   {
     Verbosity Verb;
-    boost::posix_time::ptime Time;
-    unsigned Tune;
+    UniqueTime Time;
     std::string Category;
     std::string Message;
+    MapTags Tags;
   };
 
   typedef boost::shared_ptr<Event> EventPtr;
@@ -55,16 +56,13 @@ namespace Log
   private:
     EventQueue& Queue;
     Store& TheStore;
-
-    boost::posix_time::ptime LastTime;
-    unsigned Tune;
   };
 
   class Logger
   {
   public:
     Logger(Store& store, Verbosity verb = VERB_WARNING);
-    void Write(const Verbosity verb, const std::string& category, const std::string& message);
+    void Write(const Verbosity verb, const std::string& category, const std::string& message, const MapTags& tags = MapTags());
     void WaitForFlush();
     Verbosity GetVerbosity() const;
     void SetVerbosity(const Verbosity verb);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logger.h"
+#include "unique_time.h"
 
 #include <boost/thread/mutex.hpp>
 
@@ -11,7 +12,7 @@ namespace Log
   public:
     virtual void Add(const EventPtr& theEvent);
     EventList Find(const std::string& category) const;
-    EventList Find(const boost::posix_time::ptime& t1, const boost::posix_time::ptime& t2) const;
+    EventList Find(const UniqueTime& t1, const UniqueTime& t2) const;
 
   private:
     mutable boost::mutex LockStore;

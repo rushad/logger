@@ -25,7 +25,7 @@ namespace Log
     return result;
   }
 
-  EventList MemoryStore::Find(const boost::posix_time::ptime& t1, const boost::posix_time::ptime& t2) const
+  EventList MemoryStore::Find(const UniqueTime& t1, const UniqueTime& t2) const
   {
     boost::lock_guard<boost::mutex> locker(LockStore);
     EventList result;

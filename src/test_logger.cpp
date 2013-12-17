@@ -1,6 +1,7 @@
 #include "logger.h"
 #include "memory_store.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread/thread.hpp>
 #include <gtest/gtest.h>
 
@@ -28,6 +29,20 @@ namespace Log
     private:
       unsigned Delay;
     };
+
+    class DumbUniqueTime : public UniqueTime
+    {
+    protected:
+      virtual boost::posix_time::ptime GetClockTime() const
+      {
+        return DumbTime;
+      }
+
+    private:
+      const static boost::posix_time::ptime DumbTime;
+    };
+
+    const boost::posix_time::ptime DumbUniqueTime::DumbTime = boost::posix_time::microsec_clock::universal_time();
 
     class TestLogger : public ::testing::Test
     {
@@ -68,11 +83,26 @@ namespace Log
       ASSERT_EQ("category1", events[0]->Category);
     }
 
+    TEST_F(TestLogger, LogShouldStoreTags)
+    {
+      MapTags tags;
+      tags["first"] = "First tag";
+      tags["second"] = "Second tag";
+
+      Log.Write(VERB_INFO, "category", "message", tags);
+      Log.WaitForFlush();
+
+      EventList events = Store.Find("category");
+      ASSERT_EQ(2, events[0]->Tags.size());
+      ASSERT_EQ("First tag", events[0]->Tags["first"]);
+      ASSERT_EQ("Second tag", events[0]->Tags["second"]);
+    }
+
     TEST_F(TestLogger, LogShouldStoreTime)
     {
-      boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
+      UniqueTime t1;
       Log.Write(VERB_INFO, "category1", "message1");
-      boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
+      UniqueTime t2;
 
       boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 
@@ -84,6 +114,13 @@ namespace Log
 
       ASSERT_EQ(1, events.size());
       ASSERT_EQ("message1", events[0]->Message);
+    }
+
+    TEST_F(TestLogger, TimeShouldBeUnique)
+    {
+      DumbUniqueTime t1;
+      DumbUniqueTime t2;
+      ASSERT_EQ(false, (t1 == t2));
     }
 
     TEST_F(TestLogger, LogShouldNotDelayCallingThread)
@@ -98,30 +135,6 @@ namespace Log
 
       boost::posix_time::ptime te(t1 + boost::posix_time::millisec(delay));
       ASSERT_GE(te, t2);
-    }
-
-    TEST_F(TestLogger, LogShouldTuneTime)
-    {
-      std::string category("category");
-      Log.Write(VERB_INFO, category, "message1");
-      Log.Write(VERB_INFO, category, "message2");
-      Log.Write(VERB_INFO, category, "message3");
-      Log.Write(VERB_INFO, category, "message4");
-      Log.Write(VERB_INFO, category, "message5");
-
-      Log.WaitForFlush();
-
-      EventList events = Store.Find(category);
-
-      bool f = false;
-      for (size_t i = 0; i < events.size(); ++i)
-      {
-        if (events[i]->Tune != 0)
-        {
-          f = true;
-        }
-      }
-      ASSERT_EQ(true, f);
     }
 
     TEST_F(TestLogger, LogShouldConsiderVerbosity)

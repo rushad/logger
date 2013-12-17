@@ -9,7 +9,6 @@ namespace Log
   EventQueueThreadLoop::EventQueueThreadLoop(EventQueue& queue, Store& store)
     : Queue(queue)
     , TheStore(store)
-    , Tune(0)
   {
   }
 
@@ -24,13 +23,6 @@ namespace Log
     if(!theEvent)
       return false;
 
-    if (theEvent->Time == LastTime)
-      theEvent->Tune = ++Tune;
-    else
-      Tune = 0;
-
-    LastTime = theEvent->Time;
-
     TheStore.Add(theEvent);
     return true;
   }
@@ -42,17 +34,16 @@ namespace Log
   {
   }
 
-  void Logger::Write(const Verbosity verb, const std::string& category, const std::string& message)
+  void Logger::Write(const Verbosity verb, const std::string& category, const std::string& message, const MapTags& tags)
   {
     if(verb < Verb)
       return;
 
     EventPtr theEvent(new Event);
     theEvent->Verb = verb;
-    theEvent->Time = boost::posix_time::microsec_clock::universal_time();
-    theEvent->Tune = 0;
     theEvent->Category = category;
     theEvent->Message = message;
+    theEvent->Tags = tags;
     Queue.Put(theEvent);
   }
 

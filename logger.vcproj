@@ -199,6 +199,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\unique_time.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\xml_store.cpp"
 				>
 			</File>
@@ -222,6 +226,10 @@
 			</File>
 			<File
 				RelativePath=".\src\thread_loop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\unique_time.h"
 				>
 			</File>
 			<File
