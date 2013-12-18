@@ -79,6 +79,4 @@ namespace Log
     EventQueue Queue;
     EventQueueThreadLoop TheThreadLoop;
   };
-
-  const std::string Verb2Str(const Verbosity verb);
 }

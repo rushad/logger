@@ -8,15 +8,46 @@
 
 namespace Log
 {
-  class XmlStore : public Store
+  class XmlFileInterface
   {
   public:
-    explicit XmlStore(const std::string& dirName);
-    ~XmlStore();
+    virtual ~XmlFileInterface()
+    {
+    }
+
+    virtual void Write(const std::string& str) = 0;
+  };
+
+  class XmlFile : public XmlFileInterface
+  {
+  public:
+    XmlFile(const std::string& dirName);
+    ~XmlFile();
+    virtual void Write(const std::string& str);
+
+  private:
+    std::string DirName;
+    boost::mutex LockFileStream;
+    std::ofstream FileStream;
+  };
+
+  class FakeXmlFile : public XmlFileInterface
+  {
+  public:
+    virtual void Write(const std::string& str);
+    std::string GetRecord(unsigned index) const;
+
+  private:
+    std::vector<std::string> Records;
+  };
+
+  class XmlFileStore : public Store
+  {
+  public:
+    explicit XmlFileStore(XmlFileInterface* file);
     virtual void Add(const EventPtr& theEvent);
  
   private:
-    boost::mutex LockFile;
-    std::ofstream File;
+    XmlFileInterface* File;
   };
 }

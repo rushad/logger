@@ -1,36 +1,61 @@
-#include "xml_store.h"
+#include "xml_file_store.h"
 
 namespace Log
 {
-  XmlStore::XmlStore(const std::string& dirName)
+  XmlFile::XmlFile(const std::string& dirName)
+    : DirName(dirName)
   {
-    File.open((dirName + "/" + "log.xml").c_str());
-    if (!File.is_open())
-      throw std::exception("XmlStore::XmlStore() failed");
-    File << "<?xml version=\"1.0\"?>" << std::endl;
-    File << "<log>" << std::endl;
+    FileStream.open((dirName + "/" + "log.xml").c_str());
+    if (!FileStream.is_open())
+      throw std::exception("XmlFile::XmlFile() failed");
+    FileStream << "<?xml version=\"1.0\"?>" << std::endl;
+    FileStream << "<log>" << std::endl;
   }
 
-  XmlStore::~XmlStore()
+  XmlFile::~XmlFile()
   {
-    File << "</log>" << std::endl;
-    File.close();
+    FileStream << "</log>" << std::endl;
+    FileStream.close();
   }
 
-  void XmlStore::Add(const EventPtr& theEvent)
+  void XmlFile::Write(const std::string& str)
   {
-    boost::lock_guard<boost::mutex> locker(LockFile);
-    File << "  <event";
-    File << " time=\"" << theEvent->Time.ToString() << "\"";
-    File << " category=\"" << theEvent->Category << "\"";
-    File << " verbosity=\"" << Verb2Str(theEvent->Verb) << "\">" << std::endl;
+    boost::lock_guard<boost::mutex> locker(LockFileStream);
+    FileStream << str;
+  }
+
+  XmlFileStore::XmlFileStore(XmlFileInterface* file)
+    : File(file)
+  {
+  }
+
+  void FakeXmlFile::Write(const std::string& str)
+  {
+    Records.push_back(str);
+  }
+
+  std::string FakeXmlFile::GetRecord(unsigned index) const
+  {
+    if(index >= Records.size())
+      throw std::exception("Index is out of range");
+    return Records[index];
+  }
+
+  void XmlFileStore::Add(const EventPtr& theEvent)
+  {
+    std::string str = "  <event";
+    str += " time=\"" + theEvent->Time.ToString() + "\"";
+    str += " category=\"" + theEvent->Category + "\"";
+    str += " verbosity=\"" + Verb2Str(theEvent->Verb) + "\">\n";
 
     for(MapTags::const_iterator it = theEvent->Tags.begin(), end = theEvent->Tags.end(); it != end; ++it)
     {
-      File << "    <" << it->first << ">" << it->second << "</" << it->first << ">" << std::endl;
+      str += "    <" + it->first + ">" + it->second + "</" + it->first + ">\n";
     }
 
-    File << "    " << theEvent->Message << std::endl;
-    File << "  </event>" << std::endl;
+    str += "    " + theEvent->Message + "\n";
+    str += "  </event>\n";
+
+    File->Write(str);
   }
 }

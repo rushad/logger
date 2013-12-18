@@ -203,7 +203,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\xml_store.cpp"
+				RelativePath=".\src\xml_file_store.cpp"
 				>
 			</File>
 		</Filter>
@@ -233,7 +233,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\xml_store.h"
+				RelativePath=".\src\xml_file_store.h"
 				>
 			</File>
 		</Filter>

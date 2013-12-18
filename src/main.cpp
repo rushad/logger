@@ -1,5 +1,5 @@
 #include "logger.h"
-#include "xml_store.h"
+#include "xml_file_store.h"
 
 #include <gtest/gtest.h>
 
@@ -32,7 +32,9 @@ GTEST_API_ int main(int argc, char** argv)
 //  Log::MemoryStore store;
   try
   {
-    Log::XmlStore store("log");
+//    Log::XmlFile file("log");
+    Log::FakeXmlFile file;
+    Log::XmlFileStore store((Log::XmlFileInterface*)&file);
     Log::Logger log(store, Log::VERB_INFO);
 
     Log::MapTags tags;
@@ -43,6 +45,11 @@ GTEST_API_ int main(int argc, char** argv)
     log.Write(Log::VERB_INFO, "cat1", "msg2", tags);
     log.Write(Log::VERB_INFO, "cat3", "msg3");
     log.Write(Log::VERB_INFO, "cat4", "msg4", tags);
+
+    log.WaitForFlush();
+
+    std::string str = file.GetRecord(0);
+    std::cout << str << std::endl;
 
     log.WaitForFlush();
   }
