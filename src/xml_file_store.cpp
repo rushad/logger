@@ -2,19 +2,22 @@
 
 namespace Log
 {
-  XmlFile::XmlFile(const std::string& dirName)
+  XmlFile::XmlFile(const std::string& dirName, const unsigned maxSize)
     : DirName(dirName)
+    , MaxSize(maxSize)
   {
-    FileStream.open((dirName + "/" + "log.xml").c_str());
+    FileStream.open((DirName + "/log.xml").c_str(), std::ofstream::ate | std::ofstream::app);
     if (!FileStream.is_open())
       throw std::exception("XmlFile::XmlFile() failed");
-    FileStream << "<?xml version=\"1.0\"?>" << std::endl;
-    FileStream << "<log>" << std::endl;
+    if (!FileStream.tellp())
+    {
+      FileStream << "<?xml version=\"1.0\"?>" << std::endl;
+      FileStream << "<log>" << std::endl;
+    }
   }
 
   XmlFile::~XmlFile()
   {
-    FileStream << "</log>" << std::endl;
     FileStream.close();
   }
 
@@ -22,6 +25,23 @@ namespace Log
   {
     boost::lock_guard<boost::mutex> locker(LockFileStream);
     FileStream << str;
+    if(FileStream.tellp() > (std::streampos)(MaxSize * 1024))
+      Rotate();
+  }
+
+  void XmlFile::Rotate()
+  {
+    FileStream << "</log>" << std::endl;
+    FileStream.close();
+    
+    rename((DirName + "/log.xml").c_str(), (DirName + "/" + UniqueTime().ToString() + ".xml").c_str());
+    
+    FileStream.open((DirName + "/log.xml").c_str(), std::ofstream::trunc);
+    if (!FileStream.is_open())
+      throw std::exception(("Create file " + DirName + "/log.xml failed").c_str());
+
+    FileStream << "<?xml version=\"1.0\"?>" << std::endl;
+    FileStream << "<log>" << std::endl;
   }
 
   XmlFileStore::XmlFileStore(XmlFileInterface* file)

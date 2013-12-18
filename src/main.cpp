@@ -32,8 +32,8 @@ GTEST_API_ int main(int argc, char** argv)
 //  Log::MemoryStore store;
   try
   {
-//    Log::XmlFile file("log");
-    Log::FakeXmlFile file;
+    Log::XmlFile file("log", 10);
+//    Log::FakeXmlFile file;
     Log::XmlFileStore store((Log::XmlFileInterface*)&file);
     Log::Logger log(store, Log::VERB_INFO);
 
@@ -47,11 +47,9 @@ GTEST_API_ int main(int argc, char** argv)
     log.Write(Log::VERB_INFO, "cat4", "msg4", tags);
 
     log.WaitForFlush();
-
+/*
     std::string str = file.GetRecord(0);
-    std::cout << str << std::endl;
-
-    log.WaitForFlush();
+    std::cout << str << std::endl;*/
   }
   catch(const std::exception& e)
   {

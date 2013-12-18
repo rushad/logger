@@ -21,14 +21,17 @@ namespace Log
   class XmlFile : public XmlFileInterface
   {
   public:
-    XmlFile(const std::string& dirName);
+    XmlFile(const std::string& dirName, const unsigned maxSize);
     ~XmlFile();
     virtual void Write(const std::string& str);
 
   private:
     std::string DirName;
+    unsigned MaxSize;
     boost::mutex LockFileStream;
     std::ofstream FileStream;
+
+    void Rotate();
   };
 
   class FakeXmlFile : public XmlFileInterface
