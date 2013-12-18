@@ -11,6 +11,8 @@
 
 namespace Log
 {
+  const unsigned MaxQueueSize = 1000;
+
   enum Verbosity
   {
     VERB_INFO,
@@ -47,7 +49,7 @@ namespace Log
   class EventQueueThreadLoop : public ThreadLoop
   {
   public:
-    EventQueueThreadLoop(EventQueue& queue, Store& store);
+    EventQueueThreadLoop(EventQueue& queue, Store& store, boost::condition_variable& queueEmptied);
     ~EventQueueThreadLoop();
 
   protected:
@@ -56,20 +58,23 @@ namespace Log
   private:
     EventQueue& Queue;
     Store& TheStore;
+    boost::condition_variable& QueueEmptied;
   };
 
   class Logger
   {
   public:
-    Logger(Store& store, Verbosity verb = VERB_WARNING);
+    Logger(Store& store, const Verbosity verb = VERB_WARNING, const unsigned maxQueueSize = MaxQueueSize);
     void Write(const Verbosity verb, const std::string& category, const std::string& message, const MapTags& tags = MapTags());
     void WaitForFlush();
     Verbosity GetVerbosity() const;
     void SetVerbosity(const Verbosity verb);
 
-  private:
+  public:
     mutable boost::mutex LockVerb;
+    boost::mutex LockQueue;
     Verbosity Verb;
+    boost::condition_variable QueueEmptied;
     Store& TheStore;
     EventQueue Queue;
     EventQueueThreadLoop TheThreadLoop;

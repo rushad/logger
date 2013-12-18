@@ -11,7 +11,7 @@ namespace Log
   class XmlStore : public Store
   {
   public:
-    explicit XmlStore(const std::string& fileName);
+    explicit XmlStore(const std::string& dirName);
     ~XmlStore();
     virtual void Add(const EventPtr& theEvent);
  

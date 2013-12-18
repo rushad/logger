@@ -11,8 +11,9 @@ namespace Log
   class AtomicQueue
   {
   public:
-    AtomicQueue()
-      : Stop(false)
+    explicit AtomicQueue(unsigned maxSize)
+      : MaxSize(maxSize)
+      , Stop(false)
     {
     }
 
@@ -24,9 +25,16 @@ namespace Log
     void Put(const T& data)
     {
       {
-        boost::lock_guard<boost::mutex> locker(LockQueue);
+        boost::unique_lock<boost::mutex> locker(LockQueue);
+        if(MaxSize)
+        {
+          while (!Stop && (Queue.size() >= MaxSize))
+            EventProcessed.wait(locker);
+        }
+
         Queue.push_back(data);
       }
+
       EventArrived.notify_one();
     }
 
@@ -39,12 +47,10 @@ namespace Log
       if (Stop)
         return T();
 
-      T data = Queue.front();
+      T data(Queue.front());
       Queue.pop_front();
 
-      if (Queue.empty())
-        QueueEmptied.notify_all();
-
+      EventProcessed.notify_one();
       return data;
     }
 
@@ -55,22 +61,21 @@ namespace Log
         Stop = true;
       }
       EventArrived.notify_one();
-      QueueEmptied.notify_all();
+      EventProcessed.notify_one();
     }
 
-    void WaitForEmpty()
+    bool IsEmpty() const
     {
-      boost::unique_lock<boost::mutex> locker(LockQueue);
-      while (!Stop && !Queue.empty())
-        QueueEmptied.wait(locker);
+      boost::lock_guard<boost::mutex> locker(LockQueue);
+      return Queue.empty();
     }
-
 
   private:
     mutable boost::mutex LockQueue;
     boost::condition_variable EventArrived;
-    boost::condition_variable QueueEmptied;
+    boost::condition_variable EventProcessed;
     std::deque<T> Queue;
+    unsigned MaxSize;
     bool Stop;
   };
 }

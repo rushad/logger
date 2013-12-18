@@ -6,9 +6,10 @@
 
 namespace Log
 {
-  EventQueueThreadLoop::EventQueueThreadLoop(EventQueue& queue, Store& store)
+  EventQueueThreadLoop::EventQueueThreadLoop(EventQueue& queue, Store& store, boost::condition_variable& queueEmptied)
     : Queue(queue)
     , TheStore(store)
+    , QueueEmptied(queueEmptied)
   {
   }
 
@@ -24,13 +25,18 @@ namespace Log
       return false;
 
     TheStore.Add(theEvent);
+
+    if(Queue.IsEmpty())
+      QueueEmptied.notify_one();
+
     return true;
   }
 
-  Logger::Logger(Store& store, const Verbosity verb)
-    : TheStore(store)
-    , TheThreadLoop(Queue, TheStore)
-    , Verb(verb)
+  Logger::Logger(Store& store, const Verbosity verb, const unsigned maxQueueSize)
+    : Verb(verb)
+    , TheStore(store)
+    , Queue(maxQueueSize)
+    , TheThreadLoop(Queue, TheStore, QueueEmptied)
   {
   }
 
@@ -49,7 +55,9 @@ namespace Log
 
   void Logger::WaitForFlush()
   {
-    Queue.WaitForEmpty();
+    boost::unique_lock<boost::mutex> locker(LockQueue);
+    while (!Queue.IsEmpty())
+      QueueEmptied.wait(locker);
   }
 
   Verbosity Logger::GetVerbosity() const

@@ -30,19 +30,26 @@ GTEST_API_ int main(int argc, char** argv)
   }
 
 //  Log::MemoryStore store;
-  Log::XmlStore store("log.xml");
-  Log::Logger log(store, Log::VERB_INFO);
+  try
+  {
+    Log::XmlStore store("log");
+    Log::Logger log(store, Log::VERB_INFO);
 
-  Log::MapTags tags;
-  tags["first"] = "First tag";
-  tags["second"] = "Second tag";
-  tags["third"] = "Third tag";
-  log.Write(Log::VERB_INFO, "cat1", "сообщение", tags);
-  log.Write(Log::VERB_INFO, "cat1", "msg2", tags);
-  log.Write(Log::VERB_INFO, "cat3", "msg3");
-  log.Write(Log::VERB_INFO, "cat4", "msg4", tags);
+    Log::MapTags tags;
+    tags["first"] = "First tag";
+    tags["second"] = "Second tag";
+    tags["third"] = "Third tag";
+    log.Write(Log::VERB_INFO, "cat1", "сообщение", tags);
+    log.Write(Log::VERB_INFO, "cat1", "msg2", tags);
+    log.Write(Log::VERB_INFO, "cat3", "msg3");
+    log.Write(Log::VERB_INFO, "cat4", "msg4", tags);
 
-  log.WaitForFlush();
+    log.WaitForFlush();
+  }
+  catch(const std::exception& e)
+  {
+    std::cout << e.what() << std::endl;
+  }
 /*
   Log::EventList events = store.Find("cat1");
 

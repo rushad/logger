@@ -2,9 +2,11 @@
 
 namespace Log
 {
-  XmlStore::XmlStore(const std::string& fileName)
+  XmlStore::XmlStore(const std::string& dirName)
   {
-    File.open(fileName.c_str());
+    File.open((dirName + "/" + "log.xml").c_str());
+    if (!File.is_open())
+      throw std::exception("XmlStore::XmlStore() failed");
     File << "<?xml version=\"1.0\"?>" << std::endl;
     File << "<log>" << std::endl;
   }

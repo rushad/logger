@@ -137,6 +137,38 @@ namespace Log
       ASSERT_GE(te, t2);
     }
 
+    void LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(const unsigned maxQueueSize)
+    {
+      const unsigned numIter(100);
+      const unsigned delay = 1;
+      SlowMemoryStore store(delay);
+      Logger log(store, VERB_INFO, maxQueueSize);
+
+      boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
+      for(int i = 0; i < numIter; ++i)
+        log.Write(VERB_INFO, "category", "message");
+
+      boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
+      log.WaitForFlush();
+      boost::posix_time::ptime t3(boost::posix_time::microsec_clock::universal_time());
+
+      boost::posix_time::ptime t2e(t1 + boost::posix_time::millisec(maxQueueSize?max(0, (int)numIter - (int)maxQueueSize) * delay * 2 : 0));
+      boost::posix_time::ptime t3e(t1 + boost::posix_time::millisec(numIter * delay * 2));
+
+      EXPECT_GE(t2, t2e);
+      EXPECT_GE(t3, t3e);
+
+      EventList events = store.Find("category");
+      EXPECT_EQ(numIter, events.size());
+    }
+
+    TEST_F(TestLogger, LogShouldDelayCallingThreadWhenQueueIsOutOfSpace)
+    {
+      LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(0);
+      LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(1);
+      LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(50);
+    }
+
     TEST_F(TestLogger, LogShouldConsiderVerbosity)
     {
       Log.SetVerbosity(VERB_INFO);
