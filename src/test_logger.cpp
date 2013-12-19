@@ -46,7 +46,7 @@ namespace Log
 
     class TestLogger : public ::testing::Test
     {
-    protected:
+    public:
       TestLogger()
         : Log(Store, VERB_INFO)
       {

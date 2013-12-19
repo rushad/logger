@@ -8,48 +8,62 @@
 
 namespace Log
 {
-  class XmlFileInterface
+  class XmlFileLogic
   {
   public:
-    virtual ~XmlFileInterface()
-    {
-    }
+    XmlFileLogic(unsigned maxLogSize);
 
-    virtual void Write(const std::string& str) = 0;
-  };
+    virtual ~XmlFileLogic();
+//    virtual void OpenFile() = 0;
+    virtual unsigned GetFileSize() = 0;
 
-  class XmlFile : public XmlFileInterface
-  {
-  public:
-    XmlFile(const std::string& dirName, const unsigned maxSize);
-    ~XmlFile();
-    virtual void Write(const std::string& str);
+    void Write(const std::string& str);
+
+  protected:
+    std::auto_ptr<std::ostream> StreamPtr;
+    unsigned Written;
 
   private:
-    std::string DirName;
-    unsigned MaxSize;
-    std::ofstream FileStream;
+    virtual void Rotate() = 0;
 
-    void Rotate();
+    unsigned MaxLogSize;
   };
 
+  class XmlFile : public XmlFileLogic
+  {
+  public:
+    XmlFile(const unsigned maxLogSize, const std::string& dirName);
+    ~XmlFile();
+//    virtual void OpenFile();
+    virtual unsigned GetFileSize();
+
+  private:
+    virtual void Rotate();
+
+    std::string DirName;
+  };
+/*
   class FakeXmlFile : public XmlFileInterface
   {
   public:
+    FakeXmlFile(const std::string& dirName, const unsigned maxSize);
     virtual void Write(const std::string& str);
     std::string GetRecord(unsigned index) const;
+    unsigned GetTotalWritten() const;
 
   private:
+    unsigned MaxSize;
+    unsigned TotalWritten;
     std::vector<std::string> Records;
   };
-
+*/
   class XmlFileStore : public Store
   {
   public:
-    explicit XmlFileStore(XmlFileInterface* file);
+    explicit XmlFileStore(XmlFileLogic* file);
     virtual void Add(const EventPtr& theEvent);
  
   private:
-    XmlFileInterface* File;
+    XmlFileLogic* File;
   };
 }

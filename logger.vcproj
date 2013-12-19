@@ -195,6 +195,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\test_xml_file_store.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\thread_loop.cpp"
 				>
 			</File>

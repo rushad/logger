@@ -32,9 +32,9 @@ GTEST_API_ int main(int argc, char** argv)
 //  Log::MemoryStore store;
   try
   {
-    Log::XmlFile file("log", 10);
+    Log::XmlFile file(10*1024, "log");
 //    Log::FakeXmlFile file;
-    Log::XmlFileStore store((Log::XmlFileInterface*)&file);
+    Log::XmlFileStore store((Log::XmlFileLogic*)&file);
     Log::Logger log(store, Log::VERB_INFO);
 
     Log::MapTags tags;

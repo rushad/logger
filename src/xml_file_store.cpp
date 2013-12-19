@@ -2,55 +2,94 @@
 
 namespace Log
 {
-  XmlFile::XmlFile(const std::string& dirName, const unsigned maxSize)
-    : DirName(dirName)
-    , MaxSize(maxSize)
+  XmlFileLogic::XmlFileLogic(unsigned maxLogSize)
+    : MaxLogSize(maxLogSize)
+    , Written(0)
   {
-    FileStream.open((DirName + "/log.xml").c_str(), std::ofstream::ate | std::ofstream::app);
-    if (!FileStream.is_open())
-      throw std::exception("XmlFile::XmlFile() failed");
-    if (!FileStream.tellp())
+//    OpenFile();
+  }
+
+  XmlFileLogic::~XmlFileLogic()
+  {
+  }
+
+  void XmlFileLogic::Write(const std::string& str)
+  {
+    *StreamPtr << str;
+    Written += (unsigned)str.size();
+    if(Written > MaxLogSize)
+      Rotate();
+  }
+
+  XmlFile::XmlFile(const unsigned maxLogSize, const std::string& dirName)
+    : XmlFileLogic(maxLogSize)
+    , DirName(dirName)
+  {
+    std::auto_ptr<std::ofstream> streamPtr(new std::ofstream);
+    streamPtr->open((DirName + "/log.xml").c_str(), std::ofstream::ate | std::ofstream::app);
+    if (!streamPtr->is_open())
+      throw std::exception("XmlFile::OpenFile() failed");
+    if (!streamPtr->tellp())
     {
-      FileStream << "<?xml version=\"1.0\"?>" << std::endl;
-      FileStream << "<log>" << std::endl;
+      *streamPtr << "<?xml version=\"1.0\"?>" << std::endl;
+      *streamPtr << "<log>" << std::endl;
     }
+    Written = streamPtr->tellp();
+    StreamPtr = streamPtr;
+  }
+/*
+  void XmlFile::OpenFile()
+  {
+    std::auto_ptr<std::ofstream> streamPtr(new std::ofstream);
+    streamPtr->open((DirName + "/log.xml").c_str(), std::ofstream::ate | std::ofstream::app);
+    if (!streamPtr->is_open())
+      throw std::exception("XmlFile::OpenFile() failed");
+    if (!streamPtr->tellp())
+    {
+      *streamPtr << "<?xml version=\"1.0\"?>" << std::endl;
+      *streamPtr << "<log>" << std::endl;
+    }
+    StreamPtr = streamPtr;
+  }
+*/
+  unsigned XmlFile::GetFileSize()
+  {
+    std::ofstream* stream = static_cast<std::ofstream*>(StreamPtr.get());
+    return stream->tellp();
   }
 
   XmlFile::~XmlFile()
   {
-    FileStream.close();
-  }
-
-  void XmlFile::Write(const std::string& str)
-  {
-    FileStream << str;
-    if(FileStream.tellp() > (std::streampos)(MaxSize * 1024))
-      Rotate();
+    std::ofstream* stream = static_cast<std::ofstream*>(StreamPtr.get());
+    stream->close();
   }
 
   void XmlFile::Rotate()
   {
-    FileStream << "</log>" << std::endl;
-    FileStream.close();
+    std::ofstream* stream = static_cast<std::ofstream*>(StreamPtr.get());
+    *stream << "</log>" << std::endl;
+    stream->close();
     
     rename((DirName + "/log.xml").c_str(), (DirName + "/" + UniqueTime().ToString() + ".xml").c_str());
     
-    FileStream.open((DirName + "/log.xml").c_str(), std::ofstream::trunc);
-    if (!FileStream.is_open())
+    stream->open((DirName + "/log.xml").c_str(), std::ofstream::trunc);
+    if (!stream->is_open())
       throw std::exception(("Create file " + DirName + "/log.xml failed").c_str());
 
-    FileStream << "<?xml version=\"1.0\"?>" << std::endl;
-    FileStream << "<log>" << std::endl;
+    *stream << "<?xml version=\"1.0\"?>" << std::endl;
+    *stream << "<log>" << std::endl;
+    Written = stream->tellp();
   }
-
-  XmlFileStore::XmlFileStore(XmlFileInterface* file)
-    : File(file)
+/*
+  FakeXmlFile::FakeXmlFile(const std::string& dirName, const unsigned maxSize)
+    : MaxSize(maxSize)
   {
   }
 
   void FakeXmlFile::Write(const std::string& str)
   {
     Records.push_back(str);
+    TotalWritten += (unsigned)str.size();
   }
 
   std::string FakeXmlFile::GetRecord(unsigned index) const
@@ -58,6 +97,16 @@ namespace Log
     if(index >= Records.size())
       throw std::exception("Index is out of range");
     return Records[index];
+  }
+
+  unsigned FakeXmlFile::GetTotalWritten() const
+  {
+    return TotalWritten;
+  }
+*/
+  XmlFileStore::XmlFileStore(XmlFileLogic* file)
+    : File(file)
+  {
   }
 
   void XmlFileStore::Add(const EventPtr& theEvent)
