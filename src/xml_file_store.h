@@ -28,7 +28,6 @@ namespace Log
   private:
     std::string DirName;
     unsigned MaxSize;
-    boost::mutex LockFileStream;
     std::ofstream FileStream;
 
     void Rotate();

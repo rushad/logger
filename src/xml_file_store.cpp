@@ -23,7 +23,6 @@ namespace Log
 
   void XmlFile::Write(const std::string& str)
   {
-    boost::lock_guard<boost::mutex> locker(LockFileStream);
     FileStream << str;
     if(FileStream.tellp() > (std::streampos)(MaxSize * 1024))
       Rotate();

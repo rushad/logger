@@ -123,78 +123,89 @@ namespace Log
       ASSERT_EQ(false, (t1 == t2));
     }
 
-    TEST_F(TestLogger, LogShouldNotDelayCallingThread)
+    TEST_F(TestLogger, NoDelaysWhenQueueSpaceSufficient)
     {
       const unsigned delay = 100;
       SlowMemoryStore store(delay);
-      Logger log(store, VERB_INFO);
+      Logger log(store, VERB_INFO, 0);
 
       boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
       log.Write(VERB_INFO, "category", "message");
       boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
 
       boost::posix_time::ptime te(t1 + boost::posix_time::millisec(delay));
-      ASSERT_GE(te, t2);
+      ASSERT_GT(te, t2);
     }
 
-    void LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(const unsigned maxQueueSize)
+    TEST_F(TestLogger, DelayWhenQueueSpaceInsufficient)
     {
+      unsigned maxQueueSize = 50;
       const unsigned numIter(100);
+      ASSERT_GE(numIter, maxQueueSize);
+
       const unsigned delay = 1;
       SlowMemoryStore store(delay);
       Logger log(store, VERB_INFO, maxQueueSize);
 
       boost::posix_time::ptime t1(boost::posix_time::microsec_clock::universal_time());
+
       for(int i = 0; i < numIter; ++i)
         log.Write(VERB_INFO, "category", "message");
 
       boost::posix_time::ptime t2(boost::posix_time::microsec_clock::universal_time());
-      log.WaitForFlush();
-      boost::posix_time::ptime t3(boost::posix_time::microsec_clock::universal_time());
 
-      boost::posix_time::ptime t2e(t1 + boost::posix_time::millisec(maxQueueSize?max(0, (int)numIter - (int)maxQueueSize) * delay * 2 : 0));
-      boost::posix_time::ptime t3e(t1 + boost::posix_time::millisec(numIter * delay * 2));
-
+      boost::posix_time::ptime t2e(t1 + boost::posix_time::millisec((numIter - maxQueueSize) * delay * 2));
       EXPECT_GE(t2, t2e);
-      EXPECT_GE(t3, t3e);
+    }
+
+    TEST_F(TestLogger, WaitForFlush)
+    {
+      unsigned maxQueueSize = 50;
+      const unsigned numIter(100);
+      ASSERT_GE(numIter, maxQueueSize);
+
+      const unsigned delay = 1;
+      SlowMemoryStore store(delay);
+      Logger log(store, VERB_INFO, maxQueueSize);
+
+      for(int i = 0; i < numIter; ++i)
+        log.Write(VERB_INFO, "category", "message");
+
+      log.WaitForFlush();
 
       EventList events = store.Find("category");
       EXPECT_EQ(numIter, events.size());
     }
 
-    TEST_F(TestLogger, LogShouldDelayCallingThreadWhenQueueIsOutOfSpace)
-    {
-      LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(0);
-      LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(1);
-      LogShouldDelayCallingThreadWhenQueueIsOutOfSpace(50);
-    }
-
     TEST_F(TestLogger, LogShouldConsiderVerbosity)
     {
       Log.SetVerbosity(VERB_INFO);
-      Log.Write(VERB_INFO, "info", "message1");
-      Log.Write(VERB_WARNING, "info", "message2");
-      Log.Write(VERB_ERROR, "info", "message3");
+      std::string category = "SetVerbosity(VERB_INFO)";
+      Log.Write(VERB_INFO, category, "message1");
+      Log.Write(VERB_WARNING, category, "message2");
+      Log.Write(VERB_ERROR, category, "message3");
 
       Log.SetVerbosity(VERB_WARNING);
-      Log.Write(VERB_INFO, "warning", "message1");
-      Log.Write(VERB_WARNING, "warning", "message2");
-      Log.Write(VERB_ERROR, "warning", "message3");
+      category = "SetVerbosity(VERB_WARNING)";
+      Log.Write(VERB_INFO, category, "message1");
+      Log.Write(VERB_WARNING, category, "message2");
+      Log.Write(VERB_ERROR, category, "message3");
 
       Log.SetVerbosity(VERB_ERROR);
-      Log.Write(VERB_INFO, "error", "message1");
-      Log.Write(VERB_WARNING, "error", "message2");
-      Log.Write(VERB_ERROR, "error", "message3");
+      category = "SetVerbosity(VERB_ERROR)";
+      Log.Write(VERB_INFO, category, "message1");
+      Log.Write(VERB_WARNING, category, "message2");
+      Log.Write(VERB_ERROR, category, "message3");
 
       Log.WaitForFlush();
 
-      EventList events = Store.Find("info");
+      EventList events = Store.Find("SetVerbosity(VERB_INFO)");
       EXPECT_EQ(3, events.size());
 
-      events = Store.Find("warning");
+      events = Store.Find("SetVerbosity(VERB_WARNING)");
       EXPECT_EQ(2, events.size());
 
-      events = Store.Find("error");
+      events = Store.Find("SetVerbosity(VERB_ERROR)");
       EXPECT_EQ(1, events.size());
     }
   }
