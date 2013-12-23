@@ -20,8 +20,9 @@ namespace Log
 
   bool EventQueueThreadLoop::LoopBody()
   {
-    EventPtr& theEvent = Queue.Get();
-    if(!theEvent)
+    bool stop = false;
+    Event& theEvent = Queue.Get(stop);
+    if(stop)
       return false;
 
     TheStore.Add(theEvent);
@@ -45,11 +46,11 @@ namespace Log
     if(verb < Verb)
       return;
 
-    EventPtr theEvent(new Event);
-    theEvent->Verb = verb;
-    theEvent->Category = category;
-    theEvent->Message = message;
-    theEvent->Tags = tags;
+    Event theEvent;
+    theEvent.Verb = verb;
+    theEvent.Category = category;
+    theEvent.Message = message;
+    theEvent.Tags = tags;
     Queue.Put(theEvent);
   }
 

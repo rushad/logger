@@ -179,6 +179,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\file_system.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\logger.cpp"
 				>
 			</File>
@@ -218,6 +222,18 @@
 			>
 			<File
 				RelativePath=".\src\atomic_queue.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\fake_file_system.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\file_system.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\file_system_facade.h"
 				>
 			</File>
 			<File

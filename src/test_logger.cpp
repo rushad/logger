@@ -19,7 +19,7 @@ namespace Log
       {
       }
 
-      virtual void Add(const EventPtr& theEvent)
+      virtual void Add(const Event& theEvent)
       {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(Delay));
         MemoryStore::Add(theEvent);
@@ -67,7 +67,7 @@ namespace Log
       EventList events = Store.Find("category1");
 
       ASSERT_EQ(1, events.size());
-      ASSERT_EQ("message1", events[0]->Message);
+      ASSERT_EQ("message1", events[0].Message);
     }
 
     TEST_F(TestLogger, LogShouldStoreCategory)
@@ -80,7 +80,7 @@ namespace Log
       EventList events = Store.Find("category1");
 
       ASSERT_EQ(1, events.size());
-      ASSERT_EQ("category1", events[0]->Category);
+      ASSERT_EQ("category1", events[0].Category);
     }
 
     TEST_F(TestLogger, LogShouldStoreTags)
@@ -93,9 +93,9 @@ namespace Log
       Log.WaitForFlush();
 
       EventList events = Store.Find("category");
-      ASSERT_EQ(2, events[0]->Tags.size());
-      ASSERT_EQ("First tag", events[0]->Tags["first"]);
-      ASSERT_EQ("Second tag", events[0]->Tags["second"]);
+      ASSERT_EQ(2, events[0].Tags.size());
+      ASSERT_EQ("First tag", events[0].Tags["first"]);
+      ASSERT_EQ("Second tag", events[0].Tags["second"]);
     }
 
     TEST_F(TestLogger, LogShouldStoreTime)
@@ -113,7 +113,7 @@ namespace Log
       EventList events = Store.Find(t1, t2);
 
       ASSERT_EQ(1, events.size());
-      ASSERT_EQ("message1", events[0]->Message);
+      ASSERT_EQ("message1", events[0].Message);
     }
 
     TEST_F(TestLogger, TimeShouldBeUnique)

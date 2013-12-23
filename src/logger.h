@@ -30,9 +30,8 @@ namespace Log
     MapTags Tags;
   };
 
-  typedef boost::shared_ptr<Event> EventPtr;
-  typedef std::vector<EventPtr> EventList;
-  typedef AtomicQueue<EventPtr> EventQueue;
+  typedef std::vector<Event> EventList;
+  typedef AtomicQueue<Event> EventQueue;
 
   const std::string Verb2Str(const Verbosity verb);
 
@@ -43,7 +42,7 @@ namespace Log
     {
     }
 
-    virtual void Add(const EventPtr& theEvent) = 0;
+    virtual void Add(const Event& theEvent) = 0;
   };
 
   class EventQueueThreadLoop : public ThreadLoop

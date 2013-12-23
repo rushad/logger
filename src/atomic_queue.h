@@ -38,14 +38,18 @@ namespace Log
       EventArrived.notify_one();
     }
 
-    T Get()
+    T Get(bool& stop)
     {
       boost::unique_lock<boost::mutex> locker(LockQueue);
       while (!Stop && Queue.empty())
         EventArrived.wait(locker);
 
+      stop = false;
       if (Stop)
+      {
+        stop = true;
         return T();
+      }
 
       T data(Queue.front());
       Queue.pop_front();

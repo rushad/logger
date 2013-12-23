@@ -2,7 +2,7 @@
 
 namespace Log
 {
-  void MemoryStore::Add(const EventPtr& theEvent)
+  void MemoryStore::Add(const Event& theEvent)
   {
     boost::lock_guard<boost::mutex> locker(LockStore);
     Events.push_back(theEvent);
@@ -15,8 +15,8 @@ namespace Log
 
     for (EventList::const_iterator it = Events.begin(), end = Events.end() ; it != end ; ++it)
     {
-      EventPtr theEvent = *it;
-      if (theEvent->Category == category)
+      Event theEvent = *it;
+      if (theEvent.Category == category)
       {
         result.push_back(theEvent);
       }
@@ -32,8 +32,8 @@ namespace Log
 
     for (EventList::const_iterator it = Events.begin(), end = Events.end() ; it != end ; ++it)
     {
-      EventPtr theEvent = *it;
-      if ((theEvent->Time >= t1) && (theEvent->Time <= t2))
+      Event theEvent = *it;
+      if ((theEvent.Time >= t1) && (theEvent.Time <= t2))
       {
         result.push_back(theEvent);
       }
