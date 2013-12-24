@@ -61,7 +61,7 @@ namespace Log
       XmlFileStore store("log", facade);
 
       ASSERT_TRUE(store.GetStream().good());
-      ASSERT_EQ(1, facade.CreateCallCount);
+      ASSERT_EQ(1, facade.CreateFileCallCount);
       ASSERT_EQ("log/log.xml", facade.Name);
     }
 
@@ -114,25 +114,35 @@ namespace Log
 
     TEST_F(TestXmlFileStore, RotateShouldCreateNewStream)
     {
-      const unsigned maxLogSize = 10*1024;
+      const unsigned maxLogSize = 1024;
       FakeFileSystem facade;
       XmlFileStore store("log", facade, maxLogSize);
 
       Event theEvent = CreateTestEvent();
 
-      facade.OpenCallCount = 0;
-      facade.CreateCallCount = 0;
+      facade.OpenFileCallCount = 0;
+      facade.CreateFileCallCount = 0;
+      facade.RenameFileCallCount = 0;
+
+      const std::string strEvent = 
+        "  <event time=\"" + theEvent.Time.ToString() + "\" category=\"category\" verbosity=\"info\">\n"
+        "    <first>First tag</first>\n"
+        "    <second>Second tag</second>\n"
+        "    <third>Third tag</third>\n"
+        "    message\n"
+        "  </event>\n";
 
       std::ostream& stream1 = store.GetStream();
-      while (stream1.tellp() < maxLogSize)
+      for(size_t l = Header.size(); l < maxLogSize; l += strEvent.size())
       {
         store.Add(theEvent);
       }
       std::ostream& stream2 = store.GetStream();
 
-      ASSERT_NE(&stream1, &stream2);
-      ASSERT_EQ(0, facade.OpenCallCount);
-      ASSERT_EQ(1, facade.CreateCallCount);
+//      ASSERT_NE(&stream1, &stream2);
+      ASSERT_EQ(0, facade.OpenFileCallCount);
+      ASSERT_EQ(1, facade.CreateFileCallCount);
+      ASSERT_EQ(1, facade.RenameFileCallCount);
     }
 
     TEST_F(TestXmlFileStore, RotateShouldAddCloseTag)
@@ -151,8 +161,7 @@ namespace Log
       XmlFileStore store("log", facade);
 
       store.Rotate();
-
-
+      ASSERT_EQ(1, facade.RenameFileCallCount);
     }
   }
 }

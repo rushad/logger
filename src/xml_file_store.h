@@ -19,7 +19,7 @@ namespace Log
   private:
     std::string GetFileName() const;
 
-    const std::string& Path;
+    const std::string Path;
     FileSystemFacade& FileSystem;
     std::auto_ptr<std::ostream> Stream;
     const size_t MaxLogSize;

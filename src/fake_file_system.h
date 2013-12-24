@@ -13,9 +13,9 @@ namespace Log
     public:
       FakeFileSystem()
         : CreateDirCallCount(0)
-        , CreateCallCount(0)
-        , OpenCallCount(0)
-        , RotateCallCount(0)
+        , CreateFileCallCount(0)
+        , OpenFileCallCount(0)
+        , RenameFileCallCount(0)
       {
       }
 
@@ -36,14 +36,14 @@ namespace Log
       {
         ExistedNames.push_back(name);
         Name = name;
-        ++CreateCallCount;
+        ++CreateFileCallCount;
         return std::auto_ptr<std::ostream>(new std::ostringstream);
       }
 
       virtual std::auto_ptr<std::ostream> OpenFile(const std::string& name)
       {
         Name = name;
-        ++OpenCallCount;
+        ++OpenFileCallCount;
         return std::auto_ptr<std::ostream>(new std::ostringstream);
       }
 
@@ -52,13 +52,19 @@ namespace Log
         LastStreamContent = static_cast<std::ostringstream&>(stream).str();
       }
 
+      virtual void RenameFile(const std::string& from, const std::string& to)
+      {
+        ++RenameFileCallCount;
+      }
+
+
       std::string LastCreatedDir;
       std::string Name;
       std::string LastStreamContent;
       unsigned CreateDirCallCount;
-      unsigned CreateCallCount;
-      unsigned OpenCallCount;
-      unsigned RotateCallCount;
+      unsigned CreateFileCallCount;
+      unsigned OpenFileCallCount;
+      unsigned RenameFileCallCount;
       std::vector<std::string> ExistedNames;
     };
   }

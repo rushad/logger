@@ -28,4 +28,8 @@ namespace Log
   {
   }
 
+  void FileSystem::RenameFile(const std::string& from, const std::string& to)
+  {
+    rename(from.c_str(), to.c_str());
+  }
 }

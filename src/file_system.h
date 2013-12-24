@@ -14,5 +14,6 @@ namespace Log
     virtual std::auto_ptr<std::ostream> CreateFile(const std::string& name);
     virtual std::auto_ptr<std::ostream> OpenFile(const std::string& name);
     virtual void OnCloseFile(std::ostream& stream);
+    virtual void RenameFile(const std::string& from, const std::string& to);
   };
 }

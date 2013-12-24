@@ -53,7 +53,10 @@ namespace Log
   {
     *Stream << "</log>\n";
     FileSystem.OnCloseFile(*Stream);
-    Stream.release();
+    Stream.reset();
+
+    FileSystem.RenameFile(GetFileName(), Path + "/" + UniqueTime().ToString() + ".xml");
+
     InitStream();
   }
 
