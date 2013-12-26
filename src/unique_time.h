@@ -7,27 +7,22 @@
 
 namespace Log
 {
-  class UniqueTime
+  struct UniqueTime
   {
-  public:
-    UniqueTime();
-    std::string ToString() const;
-    bool operator>(const UniqueTime& t2) const;
-    bool operator<(const UniqueTime& t2) const;
-    bool operator>=(const UniqueTime& t2) const;
-    bool operator<=(const UniqueTime& t2) const;
-    bool operator==(const UniqueTime& t2) const;
-    bool operator!=(const UniqueTime& t2) const;
+    UniqueTime()
+      : Tune(0)
+    {
+    }
 
-  protected:
-    virtual boost::posix_time::ptime GetClockTime() const;
+    UniqueTime(const boost::posix_time::ptime time, const unsigned tune)
+      : Time(time)
+      , Tune(tune)
+    {
+    }
 
-  private:
     boost::posix_time::ptime Time;
     unsigned Tune;
-
-    static boost::mutex LockStaticData;
-    static boost::posix_time::ptime LastTime;
-    static unsigned LastTune;
+    bool operator<(const UniqueTime& t2) const;
+    std::string ToString() const;
   };
 }

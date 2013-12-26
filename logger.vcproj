@@ -199,11 +199,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\test_time_generator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\test_xml_file_store.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\thread_loop.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\time_generator.cpp"
 				>
 			</File>
 			<File
@@ -246,6 +254,10 @@
 			</File>
 			<File
 				RelativePath=".\src\thread_loop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\src\time_generator.h"
 				>
 			</File>
 			<File

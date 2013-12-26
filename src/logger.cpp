@@ -47,6 +47,7 @@ namespace Log
       return;
 
     Event theEvent;
+    theEvent.Time = TimeGen.Now();
     theEvent.Verb = verb;
     theEvent.Category = category;
     theEvent.Message = message;

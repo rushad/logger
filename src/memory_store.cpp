@@ -33,7 +33,7 @@ namespace Log
     for (EventList::const_iterator it = Events.begin(), end = Events.end() ; it != end ; ++it)
     {
       Event theEvent = *it;
-      if ((theEvent.Time >= t1) && (theEvent.Time <= t2))
+      if ((t1 < theEvent.Time) && (theEvent.Time < t2))
       {
         result.push_back(theEvent);
       }

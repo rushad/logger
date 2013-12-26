@@ -1,4 +1,5 @@
 #include "file_system.h"
+#include "xml_file_store.h"
 
 #include <boost/filesystem.hpp>
 
@@ -30,6 +31,31 @@ namespace Log
 
   void FileSystem::RenameFile(const std::string& from, const std::string& to)
   {
-    rename(from.c_str(), to.c_str());
+    boost::filesystem::rename(from, to);
+  }
+
+  void FileSystem::RemoveFile(const std::string& name)
+  {
+    boost::filesystem::remove(name);
+  }
+
+  std::set<std::string> FileSystem::GetArcList(const std::string& dir) const
+  {
+    std::set<std::string> files;
+    boost::filesystem::path path(dir);
+    boost::filesystem::directory_iterator itEnd;
+
+    for (boost::filesystem::directory_iterator itDir(path); itDir != itEnd; ++itDir)
+    {
+      if (boost::filesystem::is_regular_file(itDir->status()))
+      {
+        std::string name = itDir->path().string();
+        if (name.substr(name.size() - XmlFileStore::ArcSuffix.size()) == XmlFileStore::ArcSuffix)
+        {
+          files.insert(name);
+        }
+      }
+    }
+    return files;
   }
 }

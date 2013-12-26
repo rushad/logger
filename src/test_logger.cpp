@@ -30,20 +30,6 @@ namespace Log
       unsigned Delay;
     };
 
-    class DumbUniqueTime : public UniqueTime
-    {
-    protected:
-      virtual boost::posix_time::ptime GetClockTime() const
-      {
-        return DumbTime;
-      }
-
-    private:
-      const static boost::posix_time::ptime DumbTime;
-    };
-
-    const boost::posix_time::ptime DumbUniqueTime::DumbTime = boost::posix_time::microsec_clock::universal_time();
-
     class TestLogger : public ::testing::Test
     {
     public:
@@ -100,9 +86,9 @@ namespace Log
 
     TEST_F(TestLogger, LogShouldStoreTime)
     {
-      UniqueTime t1;
+      UniqueTime t1 = Log.Now();
       Log.Write(VERB_INFO, "category1", "message1");
-      UniqueTime t2;
+      UniqueTime t2 = Log.Now();
 
       boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
 
@@ -114,13 +100,6 @@ namespace Log
 
       ASSERT_EQ(1, events.size());
       ASSERT_EQ("message1", events[0].Message);
-    }
-
-    TEST_F(TestLogger, TimeShouldBeUnique)
-    {
-      DumbUniqueTime t1;
-      DumbUniqueTime t2;
-      ASSERT_EQ(false, (t1 == t2));
     }
 
     TEST_F(TestLogger, NoDelaysWhenQueueSpaceSufficient)

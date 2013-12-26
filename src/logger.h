@@ -1,6 +1,7 @@
 #pragma once
 
 #include "atomic_queue.h"
+#include "time_generator.h"
 #include "thread_loop.h"
 #include "unique_time.h"
 
@@ -68,6 +69,10 @@ namespace Log
     void WaitForFlush();
     Verbosity GetVerbosity() const;
     void SetVerbosity(const Verbosity verb);
+    UniqueTime Now() const
+    {
+      return TimeGen.Now();
+    }
 
   public:
     mutable boost::mutex LockVerb;
@@ -77,5 +82,6 @@ namespace Log
     Store& TheStore;
     EventQueue Queue;
     EventQueueThreadLoop TheThreadLoop;
+    TimeGenerator TimeGen;
   };
 }

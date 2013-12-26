@@ -16,6 +16,8 @@ namespace Log
         , CreateFileCallCount(0)
         , OpenFileCallCount(0)
         , RenameFileCallCount(0)
+        , RemovedFilesCount(0)
+        , ThrowOnCreate(false)
       {
       }
 
@@ -34,6 +36,9 @@ namespace Log
 
       virtual std::auto_ptr<std::ostream> CreateFile(const std::string& name)
       {
+        if (ThrowOnCreate)
+          return std::auto_ptr<std::ostream>();
+
         ExistedNames.push_back(name);
         Name = name;
         ++CreateFileCallCount;
@@ -54,18 +59,35 @@ namespace Log
 
       virtual void RenameFile(const std::string& from, const std::string& to)
       {
+        RotatedName = to;
+        RenamedFiles.insert(to);
         ++RenameFileCallCount;
       }
 
+      virtual void RemoveFile(const std::string& name)
+      {
+        LastRemovedFile = name;
+        ++RemovedFilesCount;
+      }
+
+      virtual std::set<std::string> GetArcList(const std::string& dir) const
+      {
+        return RenamedFiles;
+      }
 
       std::string LastCreatedDir;
       std::string Name;
       std::string LastStreamContent;
+      std::string RotatedName;
+      std::string LastRemovedFile;
       unsigned CreateDirCallCount;
       unsigned CreateFileCallCount;
       unsigned OpenFileCallCount;
       unsigned RenameFileCallCount;
+      unsigned RemovedFilesCount;
       std::vector<std::string> ExistedNames;
+      std::set<std::string> RenamedFiles;
+      bool ThrowOnCreate;
     };
   }
 }

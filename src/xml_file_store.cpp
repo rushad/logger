@@ -2,12 +2,17 @@
 
 #include <boost/filesystem.hpp>
 
+#include <set>
+
 namespace Log
 {
-  XmlFileStore::XmlFileStore(const std::string& path, FileSystemFacade& facade, const size_t maxLogSize)
+  const std::string XmlFileStore::ArcSuffix = ".arc.xml";
+
+  XmlFileStore::XmlFileStore(const std::string& path, FileSystemFacade& facade, const size_t maxLogSize, const unsigned maxArcCount)
     : Path(path)
     , FileSystem(facade)
     , MaxLogSize(maxLogSize)
+    , MaxArcCount(maxArcCount)
   {
     if (!facade.Exists(Path))
       facade.CreateDir(Path);
@@ -46,6 +51,8 @@ namespace Log
   void XmlFileStore::InitStream()
   {
     Stream = FileSystem.CreateFile(GetFileName());
+    if (!Stream.get())
+      throw std::exception("Can't create file");
     *Stream << "<?xml version=\"1.0\"?>\n<log>\n";
   }
 
@@ -55,9 +62,15 @@ namespace Log
     FileSystem.OnCloseFile(*Stream);
     Stream.reset();
 
-    FileSystem.RenameFile(GetFileName(), Path + "/" + UniqueTime().ToString() + ".xml");
+    FileSystem.RenameFile(GetFileName(), Path + "/" + TimeGen.Now().ToString() + ArcSuffix);
+    RemoveOldFiles();
 
     InitStream();
+  }
+
+  UniqueTime XmlFileStore::GetLastTime() const
+  {
+    return TimeGen.GetLastTime();
   }
 
   std::string XmlFileStore::GetFileName() const
@@ -65,4 +78,17 @@ namespace Log
     return Path + "/log.xml";
   }
 
+  void XmlFileStore::RemoveOldFiles() const
+  {
+    std::set<std::string> files = FileSystem.GetArcList(Path);
+
+    if (files.size() > MaxArcCount)
+    {
+      std::set<std::string>::const_iterator itFile = files.begin();
+      for (size_t i = 0; i < files.size() - MaxArcCount; ++i, ++itFile)
+      {
+        FileSystem.RemoveFile(*itFile);
+      }
+    }
+  }
 }

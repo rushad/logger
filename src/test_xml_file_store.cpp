@@ -8,18 +8,6 @@ namespace Log
 {
   namespace Test
   {
-    class FakeUniqueTime : public UniqueTime
-    {
-    protected:
-      virtual boost::posix_time::ptime GetClockTime() const
-      {
-        return FakeTime;
-      }
-
-    private:
-      const static boost::posix_time::ptime FakeTime;
-    };
-
     class TestXmlFileStore : public ::testing::Test
     {
     protected:
@@ -27,7 +15,7 @@ namespace Log
       {
         Event theEvent;
         theEvent.Verb = VERB_INFO;
-        theEvent.Time = FakeUniqueTime();
+        theEvent.Time = TimeGen.Now();
         theEvent.Category = "category";
         theEvent.Message = "message";
         theEvent.Tags["first"] = "First tag";
@@ -37,22 +25,21 @@ namespace Log
       }
 
       const static std::string Header;
+      TimeGenerator TimeGen;
     };
 
     const std::string TestXmlFileStore::Header = "<?xml version=\"1.0\"?>\n<log>\n";
-
-    const boost::posix_time::ptime FakeUniqueTime::FakeTime = boost::posix_time::microsec_clock::universal_time();
 
     TEST_F(TestXmlFileStore, CtorShouldCreateAbsentPath)
     {
       FakeFileSystem facade;
       XmlFileStore store("log", facade);
 
-      ASSERT_EQ(1, facade.CreateDirCallCount);
-      ASSERT_EQ("log", facade.LastCreatedDir);
+      EXPECT_EQ(1, facade.CreateDirCallCount);
+      EXPECT_EQ("log", facade.LastCreatedDir);
 
       XmlFileStore store1("log", facade);
-      ASSERT_EQ(1, facade.CreateDirCallCount);
+      EXPECT_EQ(1, facade.CreateDirCallCount);
     }
 
     TEST_F(TestXmlFileStore, CtorShouldCreateFileIfNotExist)
@@ -60,9 +47,9 @@ namespace Log
       FakeFileSystem facade;
       XmlFileStore store("log", facade);
 
-      ASSERT_TRUE(store.GetStream().good());
-      ASSERT_EQ(1, facade.CreateFileCallCount);
-      ASSERT_EQ("log/log.xml", facade.Name);
+      EXPECT_TRUE(store.GetStream().good());
+      EXPECT_EQ(1, facade.CreateFileCallCount);
+      EXPECT_EQ("log/log.xml", facade.Name);
     }
 
     TEST_F(TestXmlFileStore, CtorShouldWriteHeaderInNewlyCreatedFile)
@@ -71,11 +58,16 @@ namespace Log
       XmlFileStore store("log", facade);
 
       std::ostringstream& stream = static_cast<std::ostringstream&>(store.GetStream());
-      ASSERT_EQ(Header, stream.str());
+      EXPECT_EQ(Header, stream.str());
     }
 
-    TEST_F(TestXmlFileStore, DISABLED_OpenFileErrorShouldThrowException)
+    TEST_F(TestXmlFileStore, CreateFileErrorShouldThrowException)
     {
+      FakeFileSystem facade;
+      facade.ThrowOnCreate = true;
+      
+      EXPECT_THROW(XmlFileStore store("log", facade), std::exception);
+      
     }
 
     TEST_F(TestXmlFileStore, LogShouldWriteToFile)
@@ -89,7 +81,7 @@ namespace Log
       store.Add(CreateTestEvent());
 
       std::size_t l2 = stream.str().size();
-      ASSERT_GT(l2 - l1, (size_t)0);
+      EXPECT_GT(l2 - l1, (size_t)0);
     }
 
     TEST_F(TestXmlFileStore, TestWrittenToFile)
@@ -109,7 +101,7 @@ namespace Log
         "    message\n"
         "  </event>\n";
 
-      ASSERT_EQ(expected, stream.str());
+      EXPECT_EQ(expected, stream.str());
     }
 
     TEST_F(TestXmlFileStore, RotateShouldCreateNewStream)
@@ -139,10 +131,9 @@ namespace Log
       }
       std::ostream& stream2 = store.GetStream();
 
-//      ASSERT_NE(&stream1, &stream2);
-      ASSERT_EQ(0, facade.OpenFileCallCount);
-      ASSERT_EQ(1, facade.CreateFileCallCount);
-      ASSERT_EQ(1, facade.RenameFileCallCount);
+      EXPECT_EQ(0, facade.OpenFileCallCount);
+      EXPECT_EQ(1, facade.CreateFileCallCount);
+      EXPECT_EQ(1, facade.RenameFileCallCount);
     }
 
     TEST_F(TestXmlFileStore, RotateShouldAddCloseTag)
@@ -152,7 +143,7 @@ namespace Log
 
       store.Rotate();
 
-      ASSERT_EQ(Header + "</log>\n", facade.LastStreamContent);
+      EXPECT_EQ(Header + "</log>\n", facade.LastStreamContent);
     }
 
     TEST_F(TestXmlFileStore, RotateShouldRenameFile)
@@ -161,7 +152,24 @@ namespace Log
       XmlFileStore store("log", facade);
 
       store.Rotate();
-      ASSERT_EQ(1, facade.RenameFileCallCount);
+      EXPECT_EQ(1, facade.RenameFileCallCount);
+      EXPECT_EQ("log/" + store.GetLastTime().ToString() + ".arc.xml", facade.RotatedName);
+    }
+
+    TEST_F(TestXmlFileStore, RotateShouldRemoveOldFiles)
+    {
+      const unsigned maxArcCount = 10;
+      FakeFileSystem facade;
+      XmlFileStore store("log", facade, 1024, maxArcCount);
+
+      store.Rotate();
+      std::string arcName = facade.RotatedName;
+
+      for(int i = 0; i < maxArcCount; ++i)
+        store.Rotate();
+
+      EXPECT_EQ(1, facade.RemovedFilesCount);
+      EXPECT_EQ(arcName, facade.LastRemovedFile);
     }
   }
 }
