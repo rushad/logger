@@ -13,7 +13,7 @@ namespace Log
   public:
     XmlFileStore(
       const std::string& path, 
-      FileSystemFacade& facade, 
+      FileSystemFacade& facade,
       const size_t maxLogSize = DefMaxLogSize, 
       const unsigned maxArcCount = DefMaxArcCount);
     virtual void Add(const Event& theEvent);

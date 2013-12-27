@@ -8,7 +8,11 @@ namespace Log
 {
   const std::string XmlFileStore::ArcSuffix = ".arc.xml";
 
-  XmlFileStore::XmlFileStore(const std::string& path, FileSystemFacade& facade, const size_t maxLogSize, const unsigned maxArcCount)
+  XmlFileStore::XmlFileStore(
+    const std::string& path, 
+    FileSystemFacade& facade, 
+    const size_t maxLogSize, 
+    const unsigned maxArcCount)
     : Path(path)
     , FileSystem(facade)
     , MaxLogSize(maxLogSize)
@@ -80,12 +84,19 @@ namespace Log
 
   void XmlFileStore::RemoveOldFiles() const
   {
-    std::set<std::string> files = FileSystem.GetArcList(Path);
+    std::auto_ptr<AbstractFileSystemIterator> it = FileSystem.GetIterator(Path, "*" + ArcSuffix);
+    std::string name;
+    std::set<std::string> fileList;
 
-    if (files.size() > MaxArcCount)
+    while(!(name = it->Next()).empty())
     {
-      std::set<std::string>::const_iterator itFile = files.begin();
-      for (size_t i = 0; i < files.size() - MaxArcCount; ++i, ++itFile)
+      fileList.insert(name);
+    }
+
+    if (fileList.size() > MaxArcCount)
+    {
+      std::set<std::string>::const_iterator itFile = fileList.begin();
+      for (size_t i = 0; i < fileList.size() - MaxArcCount; ++i, ++itFile)
       {
         FileSystem.RemoveFile(*itFile);
       }

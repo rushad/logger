@@ -8,6 +8,27 @@ namespace Log
 {
   namespace Test
   {
+    class FakeFileSystemIterator : public AbstractFileSystemIterator
+    {
+    public:
+      FakeFileSystemIterator(std::vector<std::string> fileList)
+        : FileList(fileList)
+        , CurIndex(0)
+      {
+      }
+
+      virtual std::string Next()
+      {
+        if(CurIndex >= FileList.size())
+          return "";
+        return FileList[CurIndex++];
+      }
+
+    private:
+      std::vector<std::string> FileList;
+      unsigned CurIndex;
+    };
+
     class FakeFileSystem : public FileSystemFacade
     {
     public:
@@ -60,7 +81,7 @@ namespace Log
       virtual void RenameFile(const std::string& from, const std::string& to)
       {
         RotatedName = to;
-        RenamedFiles.insert(to);
+        RenamedFiles.push_back(to);
         ++RenameFileCallCount;
       }
 
@@ -68,11 +89,19 @@ namespace Log
       {
         LastRemovedFile = name;
         ++RemovedFilesCount;
+
+        std::vector<std::string>::iterator it = std::find(ExistedNames.begin(), ExistedNames.end(), name);
+        if (it != ExistedNames.end())
+          ExistedNames.erase(it);
+
+        it = std::find(RenamedFiles.begin(), RenamedFiles.end(), name);
+        if (it != RenamedFiles.end())
+          RenamedFiles.erase(it);
       }
 
-      virtual std::set<std::string> GetArcList(const std::string& dir) const
+      virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string&, const std::string&)
       {
-        return RenamedFiles;
+        return std::auto_ptr<AbstractFileSystemIterator>(new FakeFileSystemIterator(RenamedFiles));
       }
 
       std::string LastCreatedDir;
@@ -86,7 +115,7 @@ namespace Log
       unsigned RenameFileCallCount;
       unsigned RemovedFilesCount;
       std::vector<std::string> ExistedNames;
-      std::set<std::string> RenamedFiles;
+      std::vector<std::string> RenamedFiles;
       bool ThrowOnCreate;
     };
   }

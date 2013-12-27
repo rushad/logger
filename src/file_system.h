@@ -2,10 +2,22 @@
 
 #include "file_system_facade.h"
 
+#include <boost/filesystem.hpp>
+
 #include <fstream>
 
 namespace Log
 {
+  class FileSystemIterator : public AbstractFileSystemIterator
+  {
+  public:
+    FileSystemIterator(const std::string& pathName, const std::string& mask);
+    virtual std::string Next();
+  private:
+    boost::filesystem::directory_iterator DirIterator;
+    std::string Mask;
+  };
+
   class FileSystem : public FileSystemFacade
   {
   public:
@@ -16,6 +28,6 @@ namespace Log
     virtual void OnCloseFile(std::ostream& stream);
     virtual void RenameFile(const std::string& from, const std::string& to);
     virtual void RemoveFile(const std::string& name);
-    virtual std::set<std::string> GetArcList(const std::string& dir) const;
-  };
+    virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string& pathName, const std::string& mask);
+ };
 }

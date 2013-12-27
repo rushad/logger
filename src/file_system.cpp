@@ -1,10 +1,30 @@
 #include "file_system.h"
 #include "xml_file_store.h"
 
-#include <boost/filesystem.hpp>
-
 namespace Log
 {
+  FileSystemIterator::FileSystemIterator(const std::string& pathName, const std::string& mask)
+    : DirIterator(pathName)
+    , Mask(mask)
+  {
+  }
+
+  std::string FileSystemIterator::Next()
+  {
+    boost::filesystem::directory_iterator itEnd;
+    while (DirIterator != itEnd)
+    {
+      std::string name = DirIterator->path().string();
+      bool isFile = boost::filesystem::is_regular_file(DirIterator->status());
+      ++DirIterator;
+      if (isFile && (name.substr(name.size() - XmlFileStore::ArcSuffix.size()) == XmlFileStore::ArcSuffix))
+      {
+        return name;
+      }
+    }
+    return "";
+  }
+
   bool FileSystem::Exists(const std::string& name)
   {
     return boost::filesystem::exists(name);
@@ -39,23 +59,8 @@ namespace Log
     boost::filesystem::remove(name);
   }
 
-  std::set<std::string> FileSystem::GetArcList(const std::string& dir) const
+  std::auto_ptr<AbstractFileSystemIterator> FileSystem::GetIterator(const std::string& pathName, const std::string& mask)
   {
-    std::set<std::string> files;
-    boost::filesystem::path path(dir);
-    boost::filesystem::directory_iterator itEnd;
-
-    for (boost::filesystem::directory_iterator itDir(path); itDir != itEnd; ++itDir)
-    {
-      if (boost::filesystem::is_regular_file(itDir->status()))
-      {
-        std::string name = itDir->path().string();
-        if (name.substr(name.size() - XmlFileStore::ArcSuffix.size()) == XmlFileStore::ArcSuffix)
-        {
-          files.insert(name);
-        }
-      }
-    }
-    return files;
+    return std::auto_ptr<AbstractFileSystemIterator>(new FileSystemIterator(pathName, mask));
   }
 }
