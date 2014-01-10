@@ -84,14 +84,18 @@ namespace Log
 
   void XmlFileStore::RemoveOldFiles() const
   {
-    std::auto_ptr<AbstractFileSystemIterator> it = FileSystem.GetIterator(Path, "*" + ArcSuffix);
-    std::string name;
+    std::auto_ptr<AbstractFileSystemIterator> it = FileSystem.GetIterator(Path);
     std::set<std::string> fileList;
 
-    while(!(name = it->Next()).empty())
+    do
     {
+      if (!it->IsFile())
+        continue;
+      std::string name = it->FileName();
+      if (name.substr(name.size() - XmlFileStore::ArcSuffix.size()) != XmlFileStore::ArcSuffix)
+        continue;
       fileList.insert(name);
-    }
+    } while (it->Next());
 
     if (fileList.size() > MaxArcCount)
     {

@@ -11,11 +11,13 @@ namespace Log
   class FileSystemIterator : public AbstractFileSystemIterator
   {
   public:
-    FileSystemIterator(const std::string& pathName, const std::string& mask);
-    virtual std::string Next();
+    FileSystemIterator(const std::string& pathName);
+    virtual bool IsFile() const;
+    virtual std::string FileName() const;
+    virtual bool Next();
+
   private:
     boost::filesystem::directory_iterator DirIterator;
-    std::string Mask;
   };
 
   class FileSystem : public FileSystemFacade
@@ -28,6 +30,6 @@ namespace Log
     virtual void OnCloseFile(std::ostream& stream);
     virtual void RenameFile(const std::string& from, const std::string& to);
     virtual void RemoveFile(const std::string& name);
-    virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string& pathName, const std::string& mask);
+    virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string& pathName);
  };
 }

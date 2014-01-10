@@ -17,11 +17,21 @@ namespace Log
       {
       }
 
-      virtual std::string Next()
+      virtual bool IsFile() const
+      {
+        return true;
+      }
+
+      virtual std::string FileName() const
       {
         if(CurIndex >= FileList.size())
           return "";
-        return FileList[CurIndex++];
+        return FileList[CurIndex];
+      }
+
+      virtual bool Next()
+      {
+        return (++CurIndex < FileList.size());
       }
 
     private:
@@ -99,7 +109,7 @@ namespace Log
           RenamedFiles.erase(it);
       }
 
-      virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string&, const std::string&)
+      virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string&)
       {
         return std::auto_ptr<AbstractFileSystemIterator>(new FakeFileSystemIterator(RenamedFiles));
       }

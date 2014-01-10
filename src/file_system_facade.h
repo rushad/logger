@@ -13,7 +13,9 @@ namespace Log
     {
     }
 
-    virtual std::string Next() = 0;
+    virtual bool IsFile() const = 0;
+    virtual std::string FileName() const = 0;
+    virtual bool Next() = 0;
   };
 
   class FileSystemFacade
@@ -30,6 +32,6 @@ namespace Log
     virtual void OnCloseFile(std::ostream& stream) = 0;
     virtual void RenameFile(const std::string& from, const std::string& to) = 0;
     virtual void RemoveFile(const std::string& name) = 0;
-    virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string& pathName, const std::string& mask) = 0;
+    virtual std::auto_ptr<AbstractFileSystemIterator> GetIterator(const std::string& pathName) = 0;
   };
 }

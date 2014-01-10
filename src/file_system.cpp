@@ -3,12 +3,27 @@
 
 namespace Log
 {
-  FileSystemIterator::FileSystemIterator(const std::string& pathName, const std::string& mask)
+  FileSystemIterator::FileSystemIterator(const std::string& pathName)
     : DirIterator(pathName)
-    , Mask(mask)
   {
   }
 
+  bool FileSystemIterator::IsFile() const
+  {
+    return boost::filesystem::is_regular_file(DirIterator->status());
+  }
+
+  std::string FileSystemIterator::FileName() const
+  {
+    return DirIterator->path().string();
+  }
+
+  bool FileSystemIterator::Next()
+  {
+    boost::filesystem::directory_iterator itEnd;
+    return (++DirIterator != itEnd);
+  }
+/*
   std::string FileSystemIterator::Next()
   {
     boost::filesystem::directory_iterator itEnd;
@@ -24,7 +39,7 @@ namespace Log
     }
     return "";
   }
-
+*/
   bool FileSystem::Exists(const std::string& name)
   {
     return boost::filesystem::exists(name);
@@ -59,8 +74,8 @@ namespace Log
     boost::filesystem::remove(name);
   }
 
-  std::auto_ptr<AbstractFileSystemIterator> FileSystem::GetIterator(const std::string& pathName, const std::string& mask)
+  std::auto_ptr<AbstractFileSystemIterator> FileSystem::GetIterator(const std::string& pathName)
   {
-    return std::auto_ptr<AbstractFileSystemIterator>(new FileSystemIterator(pathName, mask));
+    return std::auto_ptr<AbstractFileSystemIterator>(new FileSystemIterator(pathName));
   }
 }
