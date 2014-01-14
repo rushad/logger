@@ -23,23 +23,7 @@ namespace Log
     boost::filesystem::directory_iterator itEnd;
     return (++DirIterator != itEnd);
   }
-/*
-  std::string FileSystemIterator::Next()
-  {
-    boost::filesystem::directory_iterator itEnd;
-    while (DirIterator != itEnd)
-    {
-      std::string name = DirIterator->path().string();
-      bool isFile = boost::filesystem::is_regular_file(DirIterator->status());
-      ++DirIterator;
-      if (isFile && (name.substr(name.size() - XmlFileStore::ArcSuffix.size()) == XmlFileStore::ArcSuffix))
-      {
-        return name;
-      }
-    }
-    return "";
-  }
-*/
+
   bool FileSystem::Exists(const std::string& name)
   {
     return boost::filesystem::exists(name);

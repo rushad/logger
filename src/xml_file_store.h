@@ -25,6 +25,7 @@ namespace Log
   private:
     std::string GetFileName() const;
     void RemoveOldFiles() const;
+    static bool IsArchive(const std::string& name);
 
 
     const std::string Path;

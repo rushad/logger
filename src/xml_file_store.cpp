@@ -82,25 +82,30 @@ namespace Log
     return Path + "/log.xml";
   }
 
+  bool XmlFileStore::IsArchive(const std::string& name)
+  {
+    return (name.substr(name.size() - XmlFileStore::ArcSuffix.size()) == XmlFileStore::ArcSuffix);
+  }
+
   void XmlFileStore::RemoveOldFiles() const
   {
     std::auto_ptr<AbstractFileSystemIterator> it = FileSystem.GetIterator(Path);
-    std::set<std::string> fileList;
+    std::set<std::string> sortedFileList;
 
     do
     {
       if (!it->IsFile())
         continue;
       std::string name = it->FileName();
-      if (name.substr(name.size() - XmlFileStore::ArcSuffix.size()) != XmlFileStore::ArcSuffix)
+      if (!IsArchive(name))
         continue;
-      fileList.insert(name);
+      sortedFileList.insert(name);
     } while (it->Next());
 
-    if (fileList.size() > MaxArcCount)
+    if (sortedFileList.size() > MaxArcCount)
     {
-      std::set<std::string>::const_iterator itFile = fileList.begin();
-      for (size_t i = 0; i < fileList.size() - MaxArcCount; ++i, ++itFile)
+      std::set<std::string>::const_iterator itFile = sortedFileList.begin();
+      for (size_t i = 0; i < sortedFileList.size() - MaxArcCount; ++i, ++itFile)
       {
         FileSystem.RemoveFile(*itFile);
       }
