@@ -76,11 +76,5 @@ GTEST_API_ int main(int argc, char** argv)
     std::cout << e.what() << std::endl;
   }
 */
-/*
-  Log::EventList events = store.Find("cat1");
-
-  for(Log::EventList::const_iterator it = events.begin(), end = events.end(); it != end; ++it)
-    std::cout << (*it)->Message << std::endl;
-*/
   return 0;
 }
